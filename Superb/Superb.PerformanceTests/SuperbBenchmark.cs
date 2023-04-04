@@ -1,18 +1,20 @@
-using FluentAssertions;
+﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using Whatever;
 
-namespace Superb.Tests;
+namespace Superb.PerformanceTests;
 
-public class UnitTest1
+[SimpleJob(RuntimeMoniker.Net60)]
+public class SuperbBenchmark
 {
-    [Fact]
-    public void Test1()
-    {
+    [Benchmark]
+    public IReadOnlyDictionary<string, object> Flatter_Run2()  {
+        
         object[] values = new object[]
         {
             new SampleRequest()
             {
-                Value = "1",
+                Value = null,
                 Fake = new SampleResponse()
                 {
                     Val = 400,
@@ -21,25 +23,14 @@ public class UnitTest1
                         Price = 666
                     }
                 }
-            },
-            new SampleResponse()
-            {
-                Val = 1
             }
         };
         
-        var dictionary = Flatter.ConvertToObjectDictionary(values);
-        dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
-        {
-            ["SampleRequest.Value"] = "1",
-            ["SampleRequest.Fake.Val"] = 400,
-            ["SampleRequest.Fake.Batman.Price"] = 666,
-            ["SampleResponse.Val"] = 1,
-        });
+        return Flatter2.ConvertToObjectDictionary(values);
     }
-    
-    [Fact]
-    public void Test_Complex_Key()
+
+    [Benchmark]
+    public IReadOnlyDictionary<string, object> Flatter_Run()
     {
         object[] values = new object[]
         {
@@ -57,15 +48,9 @@ public class UnitTest1
             }
         };
         
-        var dictionary = Flatter.ConvertToObjectDictionary(values);
-        dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
-        {
-            ["SampleRequest.Fake.Val"] = 400,
-            ["SampleRequest.Fake.Batman.Price"] = 666
-        });
+        return Flatter.ConvertToObjectDictionary(values);
     }
 }
-
 
 public class Batman
 {

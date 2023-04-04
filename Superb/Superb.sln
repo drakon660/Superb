@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Superb", "Superb\Superb.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Superb.Tests", "Superb.Tests\Superb.Tests.csproj", "{EAAD93A7-E20B-4422-A29D-B3083F49F738}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Superb.PerformanceTests", "Superb.PerformanceTests\Superb.PerformanceTests.csproj", "{EBCBBB53-AB6E-4CCB-8526-B18129D73839}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{EAAD93A7-E20B-4422-A29D-B3083F49F738}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAAD93A7-E20B-4422-A29D-B3083F49F738}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAAD93A7-E20B-4422-A29D-B3083F49F738}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBCBBB53-AB6E-4CCB-8526-B18129D73839}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBCBBB53-AB6E-4CCB-8526-B18129D73839}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBCBBB53-AB6E-4CCB-8526-B18129D73839}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBCBBB53-AB6E-4CCB-8526-B18129D73839}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
