@@ -8,28 +8,6 @@ namespace Superb.PerformanceTests;
 public class SuperbBenchmark
 {
     [Benchmark]
-    public IReadOnlyDictionary<string, object> Flatter_Run2()  {
-        
-        object[] values = new object[]
-        {
-            new SampleRequest()
-            {
-                Value = null,
-                Fake = new SampleResponse()
-                {
-                    Val = 400,
-                    Batman = new Batman()
-                    {
-                        Price = 666
-                    }
-                }
-            }
-        };
-        
-        return Flatter2.ConvertToObjectDictionary(values);
-    }
-
-    [Benchmark]
     public IReadOnlyDictionary<string, object> Flatter_Run()
     {
         object[] values = new object[]

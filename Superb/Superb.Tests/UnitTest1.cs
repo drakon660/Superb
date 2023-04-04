@@ -97,6 +97,51 @@ public class UnitTest1
             ["SampleRequest.Fake.Batman.Price"] = 666,
         });
     }
+    
+    [Fact]
+    public void Test_Aggregate_Omit_Props()
+    {
+        object[] values = new object[]
+        {
+            new SampleRequest()
+            {
+                Value = "1",
+                Fake = new SampleResponse()
+                {
+                    Val = 400,
+                    Batman = new Batman()
+                    {
+                        Price = 666
+                    }
+                }
+            },
+            new SampleResponse()
+            {
+                Val = 1
+            }
+        };
+        
+        var dictionary = Flatter.ConvertToObjectDictionary(values,new []{ "SampleRequest.Fake.Batman.Price", "SampleRequest.Value"});
+        string compositeKey = Flatter.AggregateDictionaryToString(dictionary);
+
+        var hash = compositeKey.GetHashCode();
+        hash.Should().Be(2146017350);
+        compositeKey.Should().Be("SampleRequest.Value-1-SampleRequest.Fake.Batman.Price-666");
+        dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
+        {
+            ["SampleRequest.Value"] = "1",
+            ["SampleRequest.Fake.Batman.Price"] = 666,
+        });
+    }
+
+    [Fact]
+    public void Test_Hash()
+    {
+        //var key = "SampleRequest.Value-1-SampleRequest.Fake.Batman.Price-666";
+        var hashCode = Flatter.Hash("SampleRequest.Value-1-SampleRequest.Fake.Batman.Price-666");
+
+        hashCode.Should().Be("BD9F823FD6B4DA0DD88B54FB8B7CE68FE5776D3383D1E97326FF7DAC8A855AF8");
+    }
 }
 
 

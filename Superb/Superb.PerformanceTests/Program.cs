@@ -3,7 +3,14 @@
 using BenchmarkDotNet.Running;
 using Superb.PerformanceTests;
 
-BenchmarkRunner.Run<SuperbBenchmark>();
+//BenchmarkRunner.Run<SuperbBenchmark>();
 
-Console.WriteLine("Hello, World!");
+
+string myString = "hello world";
+string myString2 = "hello world";
+int hashCode = myString.GetHashCode();
+int hashCode2 = myString.GetHashCode();
+
+Console.WriteLine(hashCode);
+Console.WriteLine(hashCode2);
 
