@@ -123,9 +123,7 @@ public class UnitTest1
         
         var dictionary = Flatter.ConvertToObjectDictionary(values,new []{ "SampleRequest.Fake.Batman.Price", "SampleRequest.Value"});
         string compositeKey = Flatter.AggregateDictionaryToString(dictionary);
-
-        var hash = compositeKey.GetHashCode();
-        hash.Should().Be(2146017350);
+        
         compositeKey.Should().Be("SampleRequest.Value-1-SampleRequest.Fake.Batman.Price-666");
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
@@ -153,15 +151,67 @@ public class UnitTest1
                         Value1 = 666778
                     }  
                 }
-            }
+            },
         };
         
         var dictionary = Flatter.ConvertToObjectDictionary(values);
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
-            ["SampleRequest.Value"] = "1",
-            ["SampleRequest.Fake.Batman.Price"] = 666,
+            ["[0].Filters.Value2"] = "value2",
+            ["[0].Filters.Value1"] = 555,
+            ["[1].Filters.Value2"] = "value8",
+            ["[1].Filters.Value1"] = 666778,
         });
+    }
+    
+    [Fact]
+    public void Test_Array_No_All()
+    {
+        object[] values = new Object[]
+        {
+            new FilterRequest()
+            {
+                Filters = new [] { 
+                    new Filter()
+                    {
+                        Value2 = "value2",
+                        Value1 = 555
+                    },
+                    new Filter()
+                    {
+                        Value2 = "value8",
+                        Value1 = 666778
+                    }  
+                }
+            },
+        };
+        
+        var dictionary = Flatter.ConvertToObjectDictionary(values, new string[]
+        {
+            "[1].Filters.Value2" 
+        });
+        dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
+        {
+            ["[1].Filters.Value2"] = "value8",
+        });
+    }
+    
+    [Fact]
+    public void Test_Array_Null()
+    {
+        object[] values = new Object[]
+        {
+            new FilterRequest()
+            {
+                Filters = new Filter[]
+                {
+                    null
+                }
+            },
+        };
+        
+        var dictionary = Flatter.ConvertToObjectDictionary(values);
+        dictionary.Should().BeEmpty();
     }
     
     [Fact]
@@ -173,6 +223,9 @@ public class UnitTest1
         hashCode.Should().Be("BD9F823FD6B4DA0DD88B54FB8B7CE68FE5776D3383D1E97326FF7DAC8A855AF8");
     }
 }
+
+
+
 
 
 public class Batman

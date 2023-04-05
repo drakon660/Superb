@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -40,15 +39,7 @@ public class Flatter
     
     public static string AggregateDictionaryToString(IReadOnlyDictionary<string, object> dictionary)
     {
-        StringBuilder sb = new StringBuilder();
-        foreach (KeyValuePair<string, object> kvp in dictionary)
-        {
-            sb.Append($"{kvp.Key}-{kvp.Value}");
-            sb.Append('-');
-        }
-
-        sb.Length -= 1;
-        return sb.ToString();
+        return string.Join("-", dictionary.Select(kvp => $"{kvp.Key}-{kvp.Value}"));
     }
     
     public static string Hash(string input)
@@ -75,9 +66,9 @@ public class Flatter
                 
                 var propValue = property.GetValue(value);
 
-                if (property.PropertyType == typeof(DateTime)) //TODO omg
+                if (propValue is DateTime dateTime) 
                 {
-                    var dateInString = (propValue as DateTime?).Value.ToString("yyyyMMdd");
+                    var dateInString = dateTime.ToString("yyyyMMdd");
                     if (dateInString == DateTime.MinValue.ToString("yyyyMMdd"))
                         propValue = null;
                     else
@@ -93,12 +84,14 @@ public class Flatter
             {
                 var propValue = property.GetValue(value);
 
-                if (propValue is not null)
+                if (propValue is Array array)
                 {
-                    object[] objects = ((IEnumerable)propValue).Cast<object>().ToArray();
-                    foreach (var obj in objects)
+                    for (int i=0;i<array.Length;i++)
                     {
-                        Flatten(ref flatMap, obj.GetType(), obj, property.Name);
+                        var arrayValue = array.GetValue(i);
+                        
+                        if(arrayValue is not null)
+                            Flatten(ref flatMap, arrayValue.GetType(), arrayValue, useProperties,$"[{i}].{property.Name}");
                     }
                 }
             }
@@ -130,9 +123,9 @@ public class Flatter
 
                 var propValue = property.GetValue(value);
 
-                if (property.PropertyType == typeof(DateTime)) //TODO omg
+                if (propValue is DateTime dateTime) //TODO omg
                 {
-                    var dateInString = (propValue as DateTime?).Value.ToString("yyyyMMdd");
+                    var dateInString = dateTime.ToString("yyyyMMdd");
                     if (dateInString == DateTime.MinValue.ToString("yyyyMMdd"))
                         propValue = null;
                     else
@@ -148,12 +141,19 @@ public class Flatter
             {
                 var propValue = property.GetValue(value);
 
-                if (propValue is not null)
+                if (propValue is Array array)
                 {
-                    object[] objects = ((IEnumerable)propValue).Cast<object>().ToArray();
-                    foreach (var obj in objects)
+                    // object[] objects = ((IEnumerable)propValue).Cast<object>().ToArray();
+                    // for (int i=0;i<objects.Length;i++)
+                    // {
+                    //     Flatten(ref flatMap, objects[i].GetType(), objects[i], $"[{i}].{property.Name}");
+                    // }
+                    for (int i=0;i<array.Length;i++)
                     {
-                        Flatten(ref flatMap, obj.GetType(), obj, property.Name);
+                        var arrayValue = array.GetValue(i);
+                        
+                        if(arrayValue is not null)
+                            Flatten(ref flatMap, arrayValue.GetType(), arrayValue, $"[{i}].{property.Name}");
                     }
                 }
             }
