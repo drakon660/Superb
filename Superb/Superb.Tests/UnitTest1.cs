@@ -135,6 +135,36 @@ public class UnitTest1
     }
 
     [Fact]
+    public void Test_Array()
+    {
+        object[] values = new Object[]
+        {
+            new FilterRequest()
+            {
+                Filters = new [] { 
+                    new Filter()
+                {
+                    Value2 = "value2",
+                    Value1 = 555
+                },
+                    new Filter()
+                    {
+                        Value2 = "value8",
+                        Value1 = 666778
+                    }  
+                }
+            }
+        };
+        
+        var dictionary = Flatter.ConvertToObjectDictionary(values);
+        dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
+        {
+            ["SampleRequest.Value"] = "1",
+            ["SampleRequest.Fake.Batman.Price"] = 666,
+        });
+    }
+    
+    [Fact]
     public void Test_Hash()
     {
         //var key = "SampleRequest.Value-1-SampleRequest.Fake.Batman.Price-666";
@@ -158,6 +188,16 @@ public class SampleResponse
 {
     public int Val { get; set; }
     public Batman Batman { get; set; }
-    
     public DateTime Data { get; set; }
+}
+
+public class FilterRequest
+{
+    public Filter[] Filters { get; set; }
+}
+
+public class Filter
+{
+    public int Value1 { get; set; }
+    public string Value2 { get; set; }
 }
