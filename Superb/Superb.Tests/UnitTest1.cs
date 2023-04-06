@@ -27,7 +27,7 @@ public class UnitTest1
                 Val = 1
             }
         };
-        
+
         var dictionary = Flatter.ConvertToObjectDictionary(values);
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
@@ -37,7 +37,7 @@ public class UnitTest1
             ["SampleResponse.Val"] = 1,
         });
     }
-    
+
     [Fact]
     public void Test_Complex_Key()
     {
@@ -57,7 +57,7 @@ public class UnitTest1
                 }
             }
         };
-        
+
         var dictionary = Flatter.ConvertToObjectDictionary(values);
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
@@ -89,15 +89,16 @@ public class UnitTest1
                 Val = 1
             }
         };
-        
-        var dictionary = Flatter.ConvertToObjectDictionary(values,new []{ "SampleRequest.Fake.Batman.Price", "SampleRequest.Value"});
+
+        var dictionary = Flatter.ConvertToObjectDictionary(values,
+            new[] { "SampleRequest.Fake.Batman.Price", "SampleRequest.Value" });
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
             ["SampleRequest.Value"] = "1",
             ["SampleRequest.Fake.Batman.Price"] = 666,
         });
     }
-    
+
     [Fact]
     public void Test_Aggregate_Omit_Props()
     {
@@ -120,10 +121,11 @@ public class UnitTest1
                 Val = 1
             }
         };
-        
-        var dictionary = Flatter.ConvertToObjectDictionary(values,new []{ "SampleRequest.Fake.Batman.Price", "SampleRequest.Value"});
+
+        var dictionary = Flatter.ConvertToObjectDictionary(values,
+            new[] { "SampleRequest.Fake.Batman.Price", "SampleRequest.Value" });
         string compositeKey = Flatter.AggregateDictionaryToString(dictionary);
-        
+
         compositeKey.Should().Be("SampleRequest.Value-1-SampleRequest.Fake.Batman.Price-666");
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
@@ -139,39 +141,8 @@ public class UnitTest1
         {
             new FilterRequest()
             {
-                Filters = new [] { 
-                    new Filter()
+                Filters = new[]
                 {
-                    Value2 = "value2",
-                    Value1 = 555
-                },
-                    new Filter()
-                    {
-                        Value2 = "value8",
-                        Value1 = 666778
-                    }  
-                }
-            },
-        };
-        
-        var dictionary = Flatter.ConvertToObjectDictionary(values);
-        dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
-        {
-            ["[0].Filters.Value2"] = "value2",
-            ["[0].Filters.Value1"] = 555,
-            ["[1].Filters.Value2"] = "value8",
-            ["[1].Filters.Value1"] = 666778,
-        });
-    }
-    
-    [Fact]
-    public void Test_Array_No_All()
-    {
-        object[] values = new Object[]
-        {
-            new FilterRequest()
-            {
-                Filters = new [] { 
                     new Filter()
                     {
                         Value2 = "value2",
@@ -181,21 +152,84 @@ public class UnitTest1
                     {
                         Value2 = "value8",
                         Value1 = 666778
-                    }  
+                    }
                 }
             },
         };
-        
+
+        var dictionary = Flatter.ConvertToObjectDictionary(values);
+        dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
+        {
+            ["[0].Filters.Value2"] = "value2",
+            ["[0].Filters.Value1"] = 555,
+            ["[1].Filters.Value2"] = "value8",
+            ["[1].Filters.Value1"] = 666778,
+        });
+    }
+
+    [Fact]
+    public void Test_Array_No_All()
+    {
+        object[] values = new Object[]
+        {
+            new FilterRequest()
+            {
+                Filters = new[]
+                {
+                    new Filter()
+                    {
+                        Value2 = "value2",
+                        Value1 = 555
+                    },
+                    new Filter()
+                    {
+                        Value2 = "value8",
+                        Value1 = 666778
+                    }
+                }
+            },
+        };
+
         var dictionary = Flatter.ConvertToObjectDictionary(values, new string[]
         {
-            "[1].Filters.Value2" 
+            "[1].Filters.Value2"
         });
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
             ["[1].Filters.Value2"] = "value8",
         });
     }
-    
+
+    [Fact]
+    public void Test_Array_On_Top()
+    {
+        object[] values = new Object[]
+        {
+            new[]
+            {
+                new Filter()
+                {
+                    Value2 = "value2",
+                    Value1 = 555
+                },
+                new Filter()
+                {
+                    Value2 = "value8",
+                    Value1 = 666778
+                }
+            }
+        };
+
+        var dictionary = Flatter.ConvertToObjectDictionary(values);
+        dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
+        {
+            ["[0].Filter[].Value2"] = "value2",
+            ["[0].Filter[].Value1"] = 555,
+            ["[1].Filter[].Value2"] = "value8",
+            ["[1].Filter[].Value1"] = 666778,
+        });
+    }
+
     [Fact]
     public void Test_Array_Null()
     {
@@ -209,11 +243,11 @@ public class UnitTest1
                 }
             },
         };
-        
+
         var dictionary = Flatter.ConvertToObjectDictionary(values);
         dictionary.Should().BeEmpty();
     }
-    
+
     [Fact]
     public void Test_Hash()
     {
@@ -224,19 +258,17 @@ public class UnitTest1
     }
 }
 
-
-
-
-
 public class Batman
 {
     public decimal Price { get; set; }
 }
+
 public class SampleRequest
 {
     public string Value { get; set; }
     public SampleResponse Fake { get; set; }
 }
+
 public class SampleResponse
 {
     public int Val { get; set; }
