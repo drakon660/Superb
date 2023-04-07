@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Castle.DynamicLinqQueryBuilder;
 
 namespace Superb.Tests;
 
@@ -24,10 +25,49 @@ public class ClientWrapper //wrapper e.g controller, service etc
     public Data FindData(Request request)
     {
         var result = _client.GetData(request); //if a cache apply get data from cache
-        result.Users = result.Users.Where(x => x.Name == request.Name); //filter data after cache
+        var myFilter = new QueryBuilderFilterRule()
+        {
+            Condition = "or",
+            Rules = new List<QueryBuilderFilterRule>()
+            {
+                new QueryBuilderFilterRule()
+                {
+                    Condition = "and",
+                    Field = "Name",
+                    Id = "Name",
+                    Input = "NA",
+                    Operator = "equal",
+                    Type = "string",
+                    Value = new [] { "John" }
+                },
+                
+                new QueryBuilderFilterRule()
+                {
+                    Condition = "and",
+                    Field = "Name",
+                    Id = "Name",
+                    Input = "NA",
+                    Operator = "equal",
+                    Type = "string",
+                    Value = new [] { "Bob" }
+                }
+            }
+        };
+        result.Users = result.Users.BuildQuery(myFilter);
         return result;
     }
 }
+
+// public abstract class PostCacheQueryBuilder<T> 
+// {
+//     public IFilterRule Build()
+//     {
+//         
+//     }
+// }
+
+
+
 
 public record Request
 {
@@ -38,7 +78,15 @@ public record Request
 
 public class Data
 {
-    public IEnumerable<User> Users { get; set; }
+    public IEnumerable<User> Users { get; set; } = new List<User>
+    {
+        new User { Name = "John", FamilyName = "Doe" },
+        new User { Name = "Jane", FamilyName = "Doe" },
+        new User { Name = "Bob", FamilyName = "Smith" },
+        new User { Name = "Alice", FamilyName = "Jones" },
+        new User { Name = "Chris", FamilyName = "Johnson" },
+        new User { Name = "Emily", FamilyName = "Taylor" }
+    };
 }
 
 public class User
