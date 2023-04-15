@@ -1,6 +1,6 @@
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using Cysharp.Text;
 
 namespace Whatever;
 
@@ -20,7 +20,7 @@ public class Flatter
 
         return result;
     }
-
+    
     public static IReadOnlyDictionary<string, object> ConvertToObjectDictionary(object[] values,
         string[] useProperties)
     {
@@ -60,17 +60,17 @@ public class Flatter
                 var arrayValue = rootArray.GetValue(i);
 
                 if (arrayValue is not null)
-                    Flatten(ref flatMap, arrayValue.GetType(), arrayValue, $"[{i}].{type.Name}");
+                {
+                    var propName = $"[{i}].{type.Name.Remove(type.Name.Length-2)}";
+                    Flatten(ref flatMap, arrayValue.GetType(), arrayValue, propName);
+                }
             }
         }
         else
         {
-
-            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-            foreach (var property in properties)
+            foreach (var property in type.GetPropertiesForPublicInstance())
             {
-                if (property.PropertyType.IsValueType || property.PropertyType == typeof(string))
+                if (property.IsSimpleType())
                 {
                     var key = propertyName != null ? $"{propertyName}.{property.Name}" : $"{type.Name}.{property.Name}";
 
@@ -130,51 +130,45 @@ public class Flatter
     {
         if (value is Array rootArray)
         {
+            string arrayName = type.Name.Remove(type.Name.Length - 2);
+            
             for (int i = 0; i < rootArray.Length; i++)
             {
                 var arrayValue = rootArray.GetValue(i);
 
                 if (arrayValue is not null)
-                    Flatten(ref flatMap, arrayValue.GetType(), arrayValue, $"[{i}].{type.Name}");
+                {
+                    var propName = $"[{i}].{arrayName}";
+                    Flatten(ref flatMap, arrayValue.GetType(), arrayValue, propName);
+                }
             }
         }
         else
         {
-            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-            foreach (var property in properties)
+            foreach (var property in type.GetPropertiesForPublicInstance())
             {
-                if (property.PropertyType.IsValueType || property.PropertyType == typeof(string))
+                if (property.IsSimpleType())
                 {
-                    var key = propertyName != null ? $"{propertyName}.{property.Name}" : $"{type.Name}.{property.Name}";
-
+                    var key = $"{propertyName ?? type.Name}.{property.Name}";
                     var propValue = property.GetValue(value);
 
-                    if (propValue is DateTime dateTime) //TODO omg
+                    if (propValue is DateTime dateTimeValue)
                     {
-                        var dateInString = dateTime.ToString("yyyyMMdd");
-                        if (dateInString == DateTime.MinValue.ToString("yyyyMMdd"))
-                            propValue = null;
-                        else
-                            propValue = dateInString;
-                    }
+                        if (dateTimeValue == DateTime.MinValue)
+                            continue;
 
-                    if (propValue is not null)
-                    {
-                        flatMap[key] = propValue;
+                        propValue = dateTimeValue.ToString("yyyyMMdd");
                     }
+                    
+                    if (propValue is not null)
+                        flatMap[key] = propValue;
                 }
-                else if (property.PropertyType.IsArray) //TODO rest IEnumerable<T> ....
+                else if (property.PropertyType.IsArray)
                 {
                     var propValue = property.GetValue(value);
 
                     if (propValue is Array array)
                     {
-                        // object[] objects = ((IEnumerable)propValue).Cast<object>().ToArray();
-                        // for (int i=0;i<objects.Length;i++)
-                        // {
-                        //     Flatten(ref flatMap, objects[i].GetType(), objects[i], $"[{i}].{property.Name}");
-                        // }
                         for (int i = 0; i < array.Length; i++)
                         {
                             var arrayValue = array.GetValue(i);
@@ -189,9 +183,7 @@ public class Flatter
                     var propValue = property.GetValue(value);
                     if (propValue is not null)
                     {
-                        var newPropertyName = propertyName != null
-                            ? $"{propertyName}.{property.Name}"
-                            : $"{type.Name}.{property.Name}";
+                        var newPropertyName = $"{propertyName ?? type.Name}.{property.Name}";
                         Flatten(ref flatMap, property.PropertyType, propValue, newPropertyName);
                     }
                 }

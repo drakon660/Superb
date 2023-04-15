@@ -1,9 +1,10 @@
 using FluentAssertions;
+using Superb.Core;
 using Whatever;
 
 namespace Superb.Tests;
 
-public class UnitTest1
+public class FlatterUnitTests
 {
     [Fact]
     public void Test_Simple_Key()
@@ -166,6 +167,57 @@ public class UnitTest1
             ["[1].Filters.Value1"] = 666778,
         });
     }
+    
+    [Fact]
+    public void Test_Array_And_Object()
+    {
+        object[] values = new Object[]
+        {
+            new FilterRequest()
+            {
+                Filters = new[]
+                {
+                    new Filter()
+                    {
+                        Value2 = "value2",
+                        Value1 = 555
+                    },
+                    new Filter()
+                    {
+                        Value2 = "value8",
+                        Value1 = 666778
+                    }
+                },
+                Item = new Item()
+                {
+                    Value = "devil"
+                }
+            },
+            new SampleResponse()
+            {
+                Val = 15,
+                Batman = new Batman()
+                {
+                    Price = 963
+                }
+            }
+        };
+
+        var dictionary = Flatter.ConvertToObjectDictionary(values);
+        dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
+        {
+            ["[0].Filters.Value2"] = "value2",
+            ["[0].Filters.Value1"] = 555,
+            ["[1].Filters.Value2"] = "value8",
+            ["[1].Filters.Value1"] = 666778,
+            
+            ["FilterRequest.Item.Value"] = "devil",
+            ["FilterRequest.Item.Value2"] = 0,
+            ["FilterRequest.Item.Value3"] = 0,
+            ["SampleResponse.Val"] = 15,
+            ["SampleResponse.Batman.Price"] = 963,
+        });
+    }
 
     [Fact]
     public void Test_Array_No_All()
@@ -223,10 +275,10 @@ public class UnitTest1
         var dictionary = Flatter.ConvertToObjectDictionary(values);
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
-            ["[0].Filter[].Value2"] = "value2",
-            ["[0].Filter[].Value1"] = 555,
-            ["[1].Filter[].Value2"] = "value8",
-            ["[1].Filter[].Value1"] = 666778,
+            ["[0].Filter.Value2"] = "value2",
+            ["[0].Filter.Value1"] = 555,
+            ["[1].Filter.Value2"] = "value8",
+            ["[1].Filter.Value1"] = 666778,
         });
     }
 
@@ -258,31 +310,3 @@ public class UnitTest1
     }
 }
 
-public class Batman
-{
-    public decimal Price { get; set; }
-}
-
-public class SampleRequest
-{
-    public string Value { get; set; }
-    public SampleResponse Fake { get; set; }
-}
-
-public class SampleResponse
-{
-    public int Val { get; set; }
-    public Batman Batman { get; set; }
-    public DateTime Data { get; set; }
-}
-
-public class FilterRequest
-{
-    public Filter[] Filters { get; set; }
-}
-
-public class Filter
-{
-    public int Value1 { get; set; }
-    public string Value2 { get; set; }
-}

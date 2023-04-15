@@ -25,7 +25,22 @@ public class ClientWrapper //wrapper e.g controller, service etc
     public Data FindData(Request request)
     {
         var result = _client.GetData(request); //if a cache apply get data from cache
-        var myFilter = new QueryBuilderFilterRule()
+        var postQueryBuilder = new UserPostQueryBuilder();
+        result.Users = result.Users.BuildQuery(postQueryBuilder.Build(request));
+        return result;
+    }
+}
+
+public abstract class PostCacheQueryBuilder<T>
+{
+    public abstract IFilterRule Build(T t);
+}
+
+public sealed class UserPostQueryBuilder : PostCacheQueryBuilder<Request>
+{
+    public override IFilterRule Build(Request request)
+    {
+       return new QueryBuilderFilterRule()
         {
             Condition = "or",
             Rules = new List<QueryBuilderFilterRule>()
@@ -38,36 +53,23 @@ public class ClientWrapper //wrapper e.g controller, service etc
                     Input = "NA",
                     Operator = "equal",
                     Type = "string",
-                    Value = new [] { "John" }
+                    Value = new [] { request.Name }
                 },
                 
-                new QueryBuilderFilterRule()
-                {
-                    Condition = "and",
-                    Field = "Name",
-                    Id = "Name",
-                    Input = "NA",
-                    Operator = "equal",
-                    Type = "string",
-                    Value = new [] { "Bob" }
-                }
+                // new QueryBuilderFilterRule()
+                // {
+                //     Condition = "and",
+                //     Field = "Name",
+                //     Id = "Name",
+                //     Input = "NA",
+                //     Operator = "equal",
+                //     Type = "string",
+                //     Value = new [] { "Bob" }
+                // }
             }
         };
-        result.Users = result.Users.BuildQuery(myFilter);
-        return result;
     }
 }
-
-// public abstract class PostCacheQueryBuilder<T> 
-// {
-//     public IFilterRule Build()
-//     {
-//         
-//     }
-// }
-
-
-
 
 public record Request
 {

@@ -12,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Superb.Core\Superb.Core.csproj" />
       <ProjectReference Include="..\Superb\Superb.csproj" />
     </ItemGroup>
 
