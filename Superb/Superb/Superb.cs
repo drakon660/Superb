@@ -1,37 +1,21 @@
 using System.Security.Cryptography;
 using System.Text;
-using Cysharp.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Whatever;
 
 public class Flatter
 {
-    public static IReadOnlyDictionary<string, object> ConvertToObjectDictionary(object[] values)
-    {
-        var result = new Dictionary<string, object>();
-
-        foreach (var value in values)
-        {
-            if (value is not null)
-            {
-                Flatten(ref result, value.GetType(), value);
-            }
-        }
-
-        return result;
-    }
-    
     public static IReadOnlyDictionary<string, object> ConvertToObjectDictionary(object[] values,
-        string[] useProperties)
+        bool arraySerializeToOneValue = false)
     {
         var result = new Dictionary<string, object>();
 
         foreach (var value in values)
         {
             if (value is not null)
-            {
-                Flatten(ref result, value.GetType(), value, useProperties);
-            }
+                Flatten(ref result, value.GetType(), value, arraySerializeToOneValue: arraySerializeToOneValue);
         }
 
         return result;
@@ -51,95 +35,29 @@ public class Flatter
     }
 
     private static void Flatten(ref Dictionary<string, object> flatMap, Type type, object value,
-        string[] useProperties, string propertyName = null)
+        string propertyName = null, bool arraySerializeToOneValue = false)
     {
         if (value is Array rootArray)
         {
-            for (int i = 0; i < rootArray.Length; i++)
+            if (arraySerializeToOneValue)
             {
-                var arrayValue = rootArray.GetValue(i);
-
-                if (arrayValue is not null)
+                var arrayValue = JsonSerializer.Serialize(value, new JsonSerializerOptions
                 {
-                    var propName = $"[{i}].{type.Name.Remove(type.Name.Length-2)}";
-                    Flatten(ref flatMap, arrayValue.GetType(), arrayValue, propName);
-                }
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                });
+                flatMap[type.Name] = arrayValue;
             }
-        }
-        else
-        {
-            foreach (var property in type.GetPropertiesForPublicInstance())
+            else
             {
-                if (property.IsSimpleType())
+                string arrayName = type.Name.Remove(type.Name.Length - 2);
+
+                for (int i = 0; i < rootArray.Length; i++)
                 {
-                    var key = propertyName != null ? $"{propertyName}.{property.Name}" : $"{type.Name}.{property.Name}";
+                    var arrayValue = rootArray.GetValue(i);
 
-                    if (!useProperties.Contains(key))
-                        continue;
-
-                    var propValue = property.GetValue(value);
-
-                    if (propValue is DateTime dateTime)
-                    {
-                        var dateInString = dateTime.ToString("yyyyMMdd");
-                        if (dateInString == DateTime.MinValue.ToString("yyyyMMdd"))
-                            propValue = null;
-                        else
-                            propValue = dateInString;
-                    }
-
-                    if (propValue is not null)
-                    {
-                        flatMap[key] = propValue;
-                    }
-                }
-                else if (property.PropertyType.IsArray) //TODO rest IEnumerable<T> ....
-                {
-                    var propValue = property.GetValue(value);
-
-                    if (propValue is Array array)
-                    {
-                        for (int i = 0; i < array.Length; i++)
-                        {
-                            var arrayValue = array.GetValue(i);
-
-                            if (arrayValue is not null)
-                                Flatten(ref flatMap, arrayValue.GetType(), arrayValue, useProperties,
-                                    $"[{i}].{property.Name}");
-                        }
-                    }
-                }
-                else
-                {
-                    var propValue = property.GetValue(value);
-                    if (propValue is not null)
-                    {
-                        var newPropertyName = propertyName != null
-                            ? $"{propertyName}.{property.Name}"
-                            : $"{type.Name}.{property.Name}";
-
-                        Flatten(ref flatMap, property.PropertyType, propValue, useProperties, newPropertyName);
-                    }
-                }
-            }
-        }
-    }
-
-    private static void Flatten(ref Dictionary<string, object> flatMap, Type type, object value,
-        string propertyName = null)
-    {
-        if (value is Array rootArray)
-        {
-            string arrayName = type.Name.Remove(type.Name.Length - 2);
-            
-            for (int i = 0; i < rootArray.Length; i++)
-            {
-                var arrayValue = rootArray.GetValue(i);
-
-                if (arrayValue is not null)
-                {
-                    var propName = $"[{i}].{arrayName}";
-                    Flatten(ref flatMap, arrayValue.GetType(), arrayValue, propName);
+                    if (arrayValue is not null)
+                        Flatten(ref flatMap, arrayValue.GetType(), arrayValue, $"{arrayName}[{i}]");
                 }
             }
         }
@@ -150,6 +68,7 @@ public class Flatter
                 if (property.IsSimpleType())
                 {
                     var key = $"{propertyName ?? type.Name}.{property.Name}";
+
                     var propValue = property.GetValue(value);
 
                     if (propValue is DateTime dateTimeValue)
@@ -159,7 +78,7 @@ public class Flatter
 
                         propValue = dateTimeValue.ToString("yyyyMMdd");
                     }
-                    
+
                     if (propValue is not null)
                         flatMap[key] = propValue;
                 }
@@ -169,12 +88,26 @@ public class Flatter
 
                     if (propValue is Array array)
                     {
-                        for (int i = 0; i < array.Length; i++)
+                        if (arraySerializeToOneValue)
                         {
-                            var arrayValue = array.GetValue(i);
+                            var arrayValue = JsonSerializer.Serialize(value, new JsonSerializerOptions
+                            {
+                                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                            });
+                            
+                            flatMap[type.Name] = arrayValue;
+                        }
+                        else
+                        {
+                            for (int i = 0; i < array.Length; i++)
+                            {
+                                var arrayValue = array.GetValue(i);
 
-                            if (arrayValue is not null)
-                                Flatten(ref flatMap, arrayValue.GetType(), arrayValue, $"[{i}].{property.Name}");
+                                if (arrayValue is not null)
+                                    Flatten(ref flatMap, arrayValue.GetType(), arrayValue,
+                                        $"{propertyName ?? type.Name}.{property.Name}[{i}]");
+                            }
                         }
                     }
                 }
@@ -182,10 +115,8 @@ public class Flatter
                 {
                     var propValue = property.GetValue(value);
                     if (propValue is not null)
-                    {
-                        var newPropertyName = $"{propertyName ?? type.Name}.{property.Name}";
-                        Flatten(ref flatMap, property.PropertyType, propValue, newPropertyName);
-                    }
+                        Flatten(ref flatMap, property.PropertyType, propValue,
+                            $"{propertyName ?? type.Name}.{property.Name}");
                 }
             }
         }

@@ -91,8 +91,7 @@ public class FlatterUnitTests
             }
         };
 
-        var dictionary = Flatter.ConvertToObjectDictionary(values,
-            new[] { "SampleRequest.Fake.Batman.Price", "SampleRequest.Value" });
+        var dictionary = Flatter.ConvertToObjectDictionary(values);
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
             ["SampleRequest.Value"] = "1",
@@ -123,8 +122,7 @@ public class FlatterUnitTests
             }
         };
 
-        var dictionary = Flatter.ConvertToObjectDictionary(values,
-            new[] { "SampleRequest.Fake.Batman.Price", "SampleRequest.Value" });
+        var dictionary = Flatter.ConvertToObjectDictionary(values);
         string compositeKey = Flatter.AggregateDictionaryToString(dictionary);
 
         compositeKey.Should().Be("SampleRequest.Value-1-SampleRequest.Fake.Batman.Price-666");
@@ -161,10 +159,10 @@ public class FlatterUnitTests
         var dictionary = Flatter.ConvertToObjectDictionary(values);
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
-            ["[0].Filters.Value2"] = "value2",
-            ["[0].Filters.Value1"] = 555,
-            ["[1].Filters.Value2"] = "value8",
-            ["[1].Filters.Value1"] = 666778,
+            ["FilterRequest.Filters[0].Value2"] = "value2",
+            ["FilterRequest.Filters[0].Value1"] = 555,
+            ["FilterRequest.Filters[1].Value2"] = "value8",
+            ["FilterRequest.Filters[1].Value1"] = 666778,
         });
     }
     
@@ -185,7 +183,8 @@ public class FlatterUnitTests
                     new Filter()
                     {
                         Value2 = "value8",
-                        Value1 = 666778
+                        Value1 = 666778,
+                        Mini = new [] { new MiniFilter() { TestValue = 606 } }
                     }
                 },
                 Item = new Item()
@@ -206,11 +205,11 @@ public class FlatterUnitTests
         var dictionary = Flatter.ConvertToObjectDictionary(values);
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
-            ["[0].Filters.Value2"] = "value2",
-            ["[0].Filters.Value1"] = 555,
-            ["[1].Filters.Value2"] = "value8",
-            ["[1].Filters.Value1"] = 666778,
-            
+            ["FilterRequest.Filters[0].Value1"] = 555,
+            ["FilterRequest.Filters[0].Value2"] = "value2",
+            ["FilterRequest.Filters[1].Value1"] = 666778,
+            ["FilterRequest.Filters[1].Value2"] = "value8",
+            ["FilterRequest.Filters[1].Mini[0].TestValue"]=606,
             ["FilterRequest.Item.Value"] = "devil",
             ["FilterRequest.Item.Value2"] = 0,
             ["FilterRequest.Item.Value3"] = 0,
@@ -242,10 +241,7 @@ public class FlatterUnitTests
             },
         };
 
-        var dictionary = Flatter.ConvertToObjectDictionary(values, new string[]
-        {
-            "[1].Filters.Value2"
-        });
+        var dictionary = Flatter.ConvertToObjectDictionary(values);
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
             ["[1].Filters.Value2"] = "value8",
@@ -272,13 +268,13 @@ public class FlatterUnitTests
             }
         };
 
-        var dictionary = Flatter.ConvertToObjectDictionary(values);
+        var dictionary = Flatter.ConvertToObjectDictionary(values, true);
         dictionary.Should().BeEquivalentTo(new Dictionary<string, object>()
         {
-            ["[0].Filter.Value2"] = "value2",
-            ["[0].Filter.Value1"] = 555,
-            ["[1].Filter.Value2"] = "value8",
-            ["[1].Filter.Value1"] = 666778,
+            ["Filter[0].Value2"] = "value2",
+            ["Filter[0].Value1"] = 555,
+            ["Filter[1].Value2"] = "value8",
+            ["Filter[1].Value1"] = 666778,
         });
     }
 
